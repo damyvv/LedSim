@@ -13,9 +13,9 @@
 #error "Only windows is supported right now... Sorry!"
 #endif
 
-void ledsim_main_thread();
-void draw(void);
-void drawCircle(int x, int y, int radius, ledsim_color_t color);
+static void ledsim_main_thread();
+static void draw(void);
+static void drawCircle(int x, int y, int radius, ledsim_color_t color);
 
 #ifdef _MSC_BUILD
 DWORD WINAPI ledsim_win_thread(void* data) {
@@ -23,10 +23,10 @@ DWORD WINAPI ledsim_win_thread(void* data) {
 }
 #endif
 
-SDL_Window* window;
-SDL_GLContext context;
+static SDL_Window* window;
+static SDL_GLContext context;
 
-ledsim_finish_callback finish_cb;
+static ledsim_finish_callback finish_cb;
 
 static uint32_t width;
 static uint32_t height;
@@ -67,7 +67,7 @@ void ledsim_setled(int index, ledsim_color_t color) {
 	leds[index] = color;
 }
 
-void ledsim_main_thread() {
+static void ledsim_main_thread() {
 	window = SDL_CreateWindow("LedSim", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_OPENGL);
 	context = SDL_GL_CreateContext(window);
 
@@ -103,7 +103,7 @@ void ledsim_main_thread() {
 	return 0;
 }
 
-void draw(void) {
+static void draw(void) {
 	for (int i = 0; i < ledcount; i++) {
 		int posX = (i % cols) * (LEDSIM_BORDER + LEDSIM_LED_RADIUS * 2) + LEDSIM_BORDER + LEDSIM_LED_RADIUS;
 		int posY = (i / cols) * (LEDSIM_BORDER + LEDSIM_LED_RADIUS * 2) + LEDSIM_BORDER + LEDSIM_LED_RADIUS;
@@ -113,7 +113,7 @@ void draw(void) {
 }
 
 /* Center of the circle is at (x,y) */
-void drawCircle(int x, int y, int radius, ledsim_color_t color) {
+static void drawCircle(int x, int y, int radius, ledsim_color_t color) {
 	glColor3f(color.r / 255.0f, color.g / 255.0f, color.b / 255.0f);
 
 	glBegin(GL_TRIANGLE_FAN);
