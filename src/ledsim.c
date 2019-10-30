@@ -1,17 +1,19 @@
 #include "ledsim.h"
 
 #include <assert.h>
+#include <math.h>
+#include <string.h>
 
 #include <SDL.h>
 #include <SDL_opengl.h>
 
-#define LEDSIM_BORDER (LEDSIM_LED_RADIUS / 5)
-
 #ifdef _MSC_BUILD
 #include <Windows.h>
 #else
-#error "Only windows is supported right now... Sorry!"
+#include <pthread.h>
 #endif
+
+#define LEDSIM_BORDER (LEDSIM_LED_RADIUS / 5)
 
 static void ledsim_main_thread();
 static void draw(void);
@@ -19,6 +21,10 @@ static void drawCircle(int x, int y, int radius, ledsim_color_t color);
 
 #ifdef _MSC_BUILD
 DWORD WINAPI ledsim_win_thread(void* data) {
+	ledsim_main_thread();
+}
+#else
+void* ledsim_unix_thread(void* data) {
 	ledsim_main_thread();
 }
 #endif
@@ -40,6 +46,9 @@ volatile ledsim_color_t* leds;
 static inline void ledsim_spawn_thread() {
 #ifdef _MSC_BUILD
 	HANDLE thread = CreateThread(NULL, 0, ledsim_win_thread, NULL, 0, NULL);
+#else
+	pthread_t thread;
+	pthread_create(&thread, NULL, ledsim_unix_thread, NULL);
 #endif
 }
 
@@ -57,7 +66,7 @@ int ledsim_start(uint32_t led_count, uint32_t r, uint32_t c, ledsim_finish_callb
 
 	size_t bytes = sizeof(ledsim_color_t) * ledcount;
 	leds = malloc(bytes);
-	memset(leds, 0, bytes);
+	memset((void*) leds, 0, bytes);
 
 	ledsim_spawn_thread();
 }
@@ -74,7 +83,8 @@ static void ledsim_main_thread() {
 	SDL_GL_SetSwapInterval(1);
 
 	if (context == NULL || window == NULL) {
-		return -1;
+		assert(0);
+		return;
 	}
 
 	glOrtho(0, width, height, 0, -1, 1);
@@ -99,8 +109,6 @@ static void ledsim_main_thread() {
 	SDL_GL_DeleteContext(context);
 
 	finish_cb();
-
-	return 0;
 }
 
 static void draw(void) {

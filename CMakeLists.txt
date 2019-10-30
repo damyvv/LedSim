@@ -12,4 +12,10 @@ target_include_directories(LedSim
 		${SDL2_INCLUDE_DIRS}
 )
 
-target_link_libraries(LedSim opengl32 SDL2-static SDL2main)
+if (WIN32)
+	set(OPENGL_LIB opengl32)
+else()
+	set(OPENGL_LIB GL)
+endif()
+
+target_link_libraries(LedSim ${OPENGL_LIB} SDL2-static SDL2main)
